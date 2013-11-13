@@ -13,6 +13,7 @@ var Selectize = function($input, settings) {
 		$input           : $input,
 		tagType          : input.tagName.toLowerCase() === 'select' ? TAG_SELECT : TAG_INPUT,
 		rtl              : /rtl/i.test(dir),
+		itemSelector     : settings.itemSelector || ':not(input)',
 
 		eventNS          : '.selectize' + (++Selectize.count),
 		highlightedValue : null,
@@ -141,7 +142,7 @@ $.extend(Selectize.prototype, {
 
 		$dropdown.on('mouseenter', '[data-selectable]', function() { return self.onOptionHover.apply(self, arguments); });
 		$dropdown.on('mousedown', '[data-selectable]', function() { return self.onOptionSelect.apply(self, arguments); });
-		watchChildEvent($control, 'mousedown', '*:not(input)', function() { return self.onItemSelect.apply(self, arguments); });
+		watchChildEvent($control, 'mousedown', self.itemSelector, function() { return self.onItemSelect.apply(self, arguments); });
 		autoGrow($control_input);
 
 		$control.on({
@@ -768,7 +769,7 @@ $.extend(Selectize.prototype, {
 		var self = this;
 		if (self.settings.mode === 'single') return;
 
-		self.$activeItems = Array.prototype.slice.apply(self.$control.children(':not(input)').addClass('active'));
+		self.$activeItems = Array.prototype.slice.apply(self.$control.children(self.itemSelector).addClass('active'));
 		if (self.$activeItems.length) {
 			self.hideInput();
 			self.close();
@@ -1522,7 +1523,7 @@ $.extend(Selectize.prototype, {
 		var self = this;
 
 		if (!self.items.length) return;
-		self.$control.children(':not(input)').remove();
+		self.$control.children(self.itemSelector).remove();
 		self.items = [];
 		self.setCaret(0);
 		self.updatePlaceholder();
@@ -1541,9 +1542,9 @@ $.extend(Selectize.prototype, {
 	insertAtCaret: function($el) {
 		var caret = Math.min(this.caretPos, this.items.length);
 		if (caret === 0) {
-			this.$control.prepend($el);
+			this.$control_input.before($el);
 		} else {
-			$(this.$control[0].childNodes[caret]).before($el);
+			this.$control.children(this.itemSelector).eq(caret - 1).after($el);
 		}
 		this.setCaret(caret + 1);
 	},
@@ -1570,7 +1571,7 @@ $.extend(Selectize.prototype, {
 
 		if (self.$activeItems.length) {
 			$tail = self.$control.children('.active:' + (direction > 0 ? 'last' : 'first'));
-			caret = self.$control.children(':not(input)').index($tail);
+			caret = self.$control.children(self.itemSelector).index($tail);
 			if (direction > 0) { caret++; }
 
 			for (i = 0, n = self.$activeItems.length; i < n; i++) {
@@ -1648,7 +1649,7 @@ $.extend(Selectize.prototype, {
 		} else {
 			$tail = self.$control.children('.active:' + tail);
 			if ($tail.length) {
-				idx = self.$control.children(':not(input)').index($tail);
+				idx = self.$control.children(self.itemSelector).index($tail);
 				self.setActiveItem(null);
 				self.setCaret(direction > 0 ? idx + 1 : idx);
 			}
@@ -1697,7 +1698,7 @@ $.extend(Selectize.prototype, {
 		// siblings, due to the fact that focus cannot be restored once lost
 		// on mobile webkit devices
 		var j, n, fn, $children, $child;
-		$children = self.$control.children(':not(input)');
+		$children = self.$control.children(self.itemSelector);
 		for (j = 0, n = $children.length; j < n; j++) {
 			$child = $($children[j]).detach();
 			if (j <  i) {
