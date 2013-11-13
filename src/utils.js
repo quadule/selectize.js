@@ -332,5 +332,4 @@ var autoGrow = function($input) {
 	};
 
 	$input.on('keydown keyup update blur', update);
-	update();
 };
